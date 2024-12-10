@@ -65,8 +65,9 @@ class TicketSystem extends EventEmitter {
     console.log('Stopping simulation...');
     this.isRunning = false;
 
-    this.vendorThreads.forEach(clearInterval);
-    this.customerThreads.forEach(clearInterval);
+    // Clear vendor and customer intervals
+    this.vendorThreads.forEach((interval) => clearInterval(interval));
+    this.customerThreads.forEach((interval) => clearInterval(interval));
 
     console.log('Simulation stopped. All threads cleared.');
 
@@ -76,16 +77,16 @@ class TicketSystem extends EventEmitter {
   }
 
   _startVendor(vendorID) {
-    return setInterval(() => {
+    const vendorInterval = setInterval(() => {
       if (!this.isRunning) {
-        clearInterval();
+        clearInterval(vendorInterval); // Stop the vendor thread if the simulation is stopped
         return;
       }
 
       const ticketsForVendor = this.vendorTickets[vendorID];
       if (!ticketsForVendor || ticketsForVendor.length === 0) {
         console.log(`${vendorID} stopping. No more tickets to add.`);
-        clearInterval();
+        clearInterval(vendorInterval); // Stop the vendor thread if no tickets are left
         return;
       }
 
@@ -99,12 +100,14 @@ class TicketSystem extends EventEmitter {
 
       console.log(`${vendorID} added ${ticketsToAdd} tickets.`);
     }, this.config.ticketReleaseInterval);
+
+    return vendorInterval; // Return the interval ID for later clearing
   }
 
   _startCustomer(customerID) {
-    return setInterval(() => {
+    const customerInterval = setInterval(() => {
       if (!this.isRunning) {
-        clearInterval();
+        clearInterval(customerInterval); // Stop the customer thread if the simulation is stopped
         return;
       }
 
@@ -115,7 +118,7 @@ class TicketSystem extends EventEmitter {
         console.log(`${customerID} purchased ticket ${ticket.id} from ${ticket.vendorID}`);
       } else if (Object.values(this.vendorTickets).every((tickets) => tickets.length === 0) && this.activeTicketPool.length === 0) {
         console.log(`${customerID} stopping: No more tickets available.`);
-        clearInterval();
+        clearInterval(customerInterval); // Stop the customer thread if no tickets are left
       } else {
         console.log(`${customerID} found no tickets.`);
       }
@@ -129,6 +132,8 @@ class TicketSystem extends EventEmitter {
         this.stopSimulation();
       }
     }, this.config.customerRetrievalInterval);
+
+    return customerInterval; // Return the interval ID for later clearing
   }
 
   getSummary() {
