@@ -8,7 +8,7 @@ class TicketSystem extends EventEmitter {
     this.customerThreads = [];
     this.isRunning = false;
 
-    this.allTickets = []; // Pool of all tickets
+    this.vendorTickets = {}; // Pre-assigned tickets for each vendor
     this.activeTicketPool = []; // Tickets available for customers to purchase
     this.vendorSales = {}; // Track tickets sold by each vendor
     this.customerPurchases = {}; // Track how many tickets each customer purchased
@@ -17,13 +17,18 @@ class TicketSystem extends EventEmitter {
   }
 
   initializeTickets() {
-    // Evenly distribute tickets across vendors
     const ticketsPerVendor = Math.floor(this.config.totalTickets / this.config.vendorCount);
+    let remainingTickets = this.config.totalTickets % this.config.vendorCount;
 
     for (let i = 0; i < this.config.vendorCount; i++) {
-      for (let j = 0; j < ticketsPerVendor; j++) {
-        this.allTickets.push({
-          id: `Ticket-${this.allTickets.length + 1}`,
+      const ticketsToAdd = ticketsPerVendor + (remainingTickets > 0 ? 1 : 0);
+      remainingTickets--;
+
+      this.vendorTickets[`Vendor-${i}`] = [];
+
+      for (let j = 0; j < ticketsToAdd; j++) {
+        this.vendorTickets[`Vendor-${i}`].push({
+          id: `Ticket-${Object.keys(this.vendorTickets).reduce((sum, key) => sum + this.vendorTickets[key].length, 1)}`,
           vendorID: `Vendor-${i}`,
         });
       }
@@ -31,7 +36,11 @@ class TicketSystem extends EventEmitter {
       this.vendorSales[`Vendor-${i}`] = 0; // Initialize each vendor's ticket sales
     }
 
-    console.log(`Preloaded ${this.allTickets.length} tickets evenly across vendors.`);
+    for (let i = 0; i < this.config.customerCount; i++) {
+      this.customerPurchases[`Customer-${i}`] = 0; // Initialize purchases for each customer
+    }
+
+    console.log(`Preloaded ${this.config.totalTickets} tickets evenly across vendors.`);
   }
 
   startSimulation() {
@@ -39,14 +48,13 @@ class TicketSystem extends EventEmitter {
     this.isRunning = true;
 
     for (let i = 0; i < this.config.vendorCount; i++) {
-      const vendorInterval = this._startVendor(i);
+      const vendorInterval = this._startVendor(`Vendor-${i}`);
       this.vendorThreads.push(vendorInterval);
     }
 
     setTimeout(() => {
       for (let i = 0; i < this.config.customerCount; i++) {
         const customerID = `Customer-${i}`;
-        this.customerPurchases[customerID] = 0;
         const customerInterval = this._startCustomer(customerID);
         this.customerThreads.push(customerInterval);
       }
@@ -74,32 +82,22 @@ class TicketSystem extends EventEmitter {
         return;
       }
 
-      if (this.allTickets.length === 0) {
-        console.log(`Vendor-${vendorID} stopping. No more tickets to add.`);
+      const ticketsForVendor = this.vendorTickets[vendorID];
+      if (!ticketsForVendor || ticketsForVendor.length === 0) {
+        console.log(`${vendorID} stopping. No more tickets to add.`);
         clearInterval();
         return;
       }
 
       const availableSpace = this.config.maxTicketCapacity - this.activeTicketPool.length;
-      const ticketsToAdd = Math.min(this.config.ticketsPerRelease, availableSpace);
+      const ticketsToAdd = Math.min(this.config.ticketsPerRelease, availableSpace, ticketsForVendor.length);
 
-      if (ticketsToAdd > 0) {
-        for (let i = 0; i < ticketsToAdd; i++) {
-          const ticket = this.allTickets.shift();
-          this.activeTicketPool.push(ticket);
-          this.vendorSales[ticket.vendorID]++;
-        }
-
-        console.log(`Vendor-${vendorID} added ${ticketsToAdd} tickets.`);
-      } else {
-        console.log(`Vendor-${vendorID} cannot add tickets. Max capacity reached.`);
+      for (let i = 0; i < ticketsToAdd; i++) {
+        const ticket = ticketsForVendor.shift();
+        this.activeTicketPool.push(ticket);
       }
 
-      // Stop vendors automatically if no more tickets to add
-      if (this.allTickets.length === 0) {
-        console.log(`Vendor-${vendorID} has no more tickets to add.`);
-        clearInterval();
-      }
+      console.log(`${vendorID} added ${ticketsToAdd} tickets.`);
     }, this.config.ticketReleaseInterval);
   }
 
@@ -113,18 +111,18 @@ class TicketSystem extends EventEmitter {
       if (this.activeTicketPool.length > 0) {
         const ticket = this.activeTicketPool.shift();
         this.customerPurchases[customerID]++;
-        console.log(`Customer-${customerID} purchased ticket ${ticket.id} from ${ticket.vendorID}`);
-      } else if (this.allTickets.length === 0 && this.activeTicketPool.length === 0) {
-        console.log(`Customer-${customerID} stopping: No more tickets available.`);
+        this.vendorSales[ticket.vendorID]++;
+        console.log(`${customerID} purchased ticket ${ticket.id} from ${ticket.vendorID}`);
+      } else if (Object.values(this.vendorTickets).every((tickets) => tickets.length === 0) && this.activeTicketPool.length === 0) {
+        console.log(`${customerID} stopping: No more tickets available.`);
         clearInterval();
       } else {
-        console.log(`Customer-${customerID} found no tickets.`);
+        console.log(`${customerID} found no tickets.`);
       }
 
-      // Check if all tickets are purchased and stop simulation
       if (
         this.activeTicketPool.length === 0 &&
-        this.allTickets.length === 0 &&
+        Object.values(this.vendorTickets).every((tickets) => tickets.length === 0) &&
         Object.values(this.customerPurchases).reduce((sum, val) => sum + val, 0) >= this.config.totalTickets
       ) {
         console.log('All tickets have been sold. Stopping simulation.');

@@ -1,0 +1,11 @@
+{
+    "maxTicketCapacity": 100,
+    "ticketsPerRelease": 10,
+    "ticketReleaseInterval": 3000,
+    "customerRetrievalInterval": 2000,
+    "vendorCount": 5,
+    "customerCount": 50,
+    "totalTickets": 500,
+    "debug": false
+  }
+  

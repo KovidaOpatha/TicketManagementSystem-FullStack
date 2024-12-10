@@ -7,60 +7,68 @@ const SummaryPage = () => {
   const summary = location.state || {};
   const navigate = useNavigate();
 
-  const handleExit = () => {
-    navigate('/');
-  };
-
   return (
-    <div className="max-w-lg mx-auto p-6 bg-white shadow-lg rounded-lg mt-10 space-y-6">
-      <h2 className="text-2xl font-semibold text-center mb-4">Simulation Summary</h2>
+    <div className="min-h-screen flex flex-col justify-center items-center text-white">
+      <div className="w-11/12 max-w-7xl p-8 bg-gray-800 rounded-lg shadow-lg space-y-8">
+        <h2 className="text-4xl font-bold text-center mb-4">Simulation Summary</h2>
 
-      {/* Display Vendor Sales */}
-      <div className="space-y-2">
-        <h3 className="text-lg font-semibold mb-2">Vendor Sales</h3>
-        <ul className="list-disc pl-4">
-          {summary?.vendorSales &&
-            Object.entries(summary.vendorSales).map(([vendor, tickets]) => (
-              <li key={vendor}>
-                {vendor}: {tickets} tickets sold
-              </li>
-            ))}
-        </ul>
-      </div>
+        {/* Grid with 4 Columns for Wide Summary */}
+        <div className="grid grid-cols-4 gap-6">
+          {/* Vendor Sales */}
+          <div className="p-4 bg-gray-900 rounded-lg shadow-md h-auto">
+            <h3 className="text-2xl font-semibold mb-4 text-center">Vendor Sales</h3>
+            <ul className="list-disc pl-4 space-y-2 text-sm">
+              {Object.entries(summary.vendorSales || {}).map(([vendor, sales]) => (
+                <li key={vendor}>
+                  <strong>{vendor}:</strong> {sales} tickets sold
+                </li>
+              ))}
+            </ul>
+          </div>
 
-      {/* Display Customer Sales */}
-      <div className="space-y-2">
-        <h3 className="text-lg font-semibold mb-2">Customer Purchases</h3>
-        <ul className="list-disc pl-4">
-          {summary?.customerPurchases &&
-            Object.entries(summary.customerPurchases).map(([customer, tickets]) => (
-              <li key={customer}>
-                {customer}: {tickets} tickets purchased
-              </li>
-            ))}
-        </ul>
-      </div>
+          {/* Customer Purchases */}
+          <div className="p-4 bg-gray-900 rounded-lg shadow-md h-auto">
+            <h3 className="text-2xl font-semibold mb-4 text-center">Customer Purchases</h3>
+            <ul className="list-disc pl-4 space-y-2 text-sm">
+              {Object.entries(summary.customerPurchases || {}).map(([customer, purchases]) => (
+                <li key={customer}>
+                  <strong>{customer}:</strong> {purchases} tickets purchased
+                </li>
+              ))}
+            </ul>
+          </div>
 
-      {/* Display Configuration Used */}
-      <div className="space-y-2">
-        <h3 className="text-lg font-semibold mb-2">Configuration Used</h3>
-        <ul className="list-disc pl-4">
-          {summary?.config &&
-            Object.entries(summary.config).map(([key, value]) => (
-              <li key={key}>
-                {key}: {value}
-              </li>
-            ))}
-        </ul>
-      </div>
+          {/* Overall Stats */}
+          <div className="p-4 bg-gray-900 rounded-lg shadow-md h-auto">
+            <h3 className="text-2xl font-semibold mb-4 text-center">Overall Stats</h3>
+            <ul className="list-disc pl-4 space-y-2 text-sm">
+              <li><strong>Total Tickets Sold:</strong> {summary.totalTicketsSold}</li>
+              <li><strong>Total Customer Tickets:</strong> {summary.totalCustomerTickets}</li>
+            </ul>
+          </div>
 
-      <div className="mt-4 text-center">
-        <button
-          onClick={handleExit}
-          className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition"
-        >
-          Exit
-        </button>
+          {/* Configuration */}
+          <div className="p-4 bg-gray-900 rounded-lg shadow-md h-auto">
+            <h3 className="text-2xl font-semibold mb-4 text-center">Configuration</h3>
+            <ul className="list-disc pl-4 space-y-2 text-sm">
+              {Object.entries(summary.config || {}).map(([key, value]) => (
+                <li key={key}>
+                  <strong>{key}:</strong> {value}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Back Button */}
+        <div className="flex justify-center mt-4">
+          <button
+            className="px-8 py-3 bg-green-600 text-white text-lg font-semibold rounded-md hover:bg-green-700 transition"
+            onClick={() => navigate('/')}
+          >
+            Back to Configuration
+          </button>
+        </div>
       </div>
     </div>
   );
