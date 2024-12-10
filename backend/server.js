@@ -14,23 +14,19 @@ let ticketSystem = null;
 
 app.post('/api/start', (req, res) => {
   const config = req.body;
-
-  if (!config.totalTickets) {
-    return res.status(400).json({ error: 'Total tickets field is missing or invalid.' });
-  }
-
   ticketSystem = new TicketSystem(config);
   ticketSystem.startSimulation();
-  res.status(200).json({ message: 'Simulation started successfully.' });
+  res.status(200).json({ message: 'Simulation started' });
 });
 
 app.post('/api/stop', (req, res) => {
   if (ticketSystem) {
     const summary = ticketSystem.stopSimulation();
     ticketSystem = null;
-    return res.status(200).json({ message: 'Simulation stopped successfully.', summary });
+    res.status(200).json({ message: 'Simulation stopped', summary });
+  } else {
+    res.status(400).json({ error: 'No simulation is currently running' });
   }
-  return res.status(400).json({ error: 'No simulation is currently running' });
 });
 
 app.listen(PORT, () => {

@@ -10,7 +10,7 @@ const ConfigForm = ({ onSubmit }) => {
   const [customerRetrievalInterval, setCustomerRetrievalInterval] = useState('');
   const [vendorCount, setVendorCount] = useState('');
   const [customerCount, setCustomerCount] = useState('');
-  const [totalTickets, setTotalTickets] = useState(''); // New field
+  const [totalTickets, setTotalTickets] = useState('');
   const [debug, setDebug] = useState(false);
 
   const navigate = useNavigate();
@@ -25,11 +25,15 @@ const ConfigForm = ({ onSubmit }) => {
       customerRetrievalInterval,
       vendorCount,
       customerCount,
-      totalTickets, // Pass total tickets here
+      totalTickets,
       debug,
     };
 
-    onSubmit(configData);
+    // Call the onSubmit passed from App.js
+    if (onSubmit) {
+      onSubmit(configData);
+    }
+
     navigate('/display', { state: configData });
   };
 
@@ -131,16 +135,11 @@ const ConfigForm = ({ onSubmit }) => {
         </div>
       </div>
 
-      <button type="submit" className="w-full bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600 transition">
-        Submit Configuration
-      </button>
-
       <button
-        type="button"
-        onClick={loadPreviousConfig}
-        className="w-full bg-gray-500 text-white p-3 rounded-md mt-4 hover:bg-gray-600 transition"
+        type="submit"
+        className="w-full bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600 transition"
       >
-        Load Previous Config
+        Submit Configuration
       </button>
     </form>
   );
