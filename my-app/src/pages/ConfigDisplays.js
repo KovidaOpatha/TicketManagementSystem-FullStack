@@ -1,11 +1,11 @@
-// src/pages/ConfigDisplay.js
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const ConfigDisplay = () => {
   const location = useLocation();
-  const configData = location.state || {}; // Fallback to an empty object if no data is passed
+  const configData = location.state || {}; // Handle fallback
   const [isRunning, setIsRunning] = useState(false);
+  const [summary, setSummary] = useState(null);
 
   const handleStart = async () => {
     try {
@@ -27,10 +27,11 @@ const ConfigDisplay = () => {
   const handleStop = async () => {
     try {
       const response = await fetch('http://localhost:3001/api/stop', { method: 'POST' });
-      if (!response.ok) throw new Error('Failed to stop the simulation');
+      if (!response.ok) throw new Error('Failed to stop');
       const result = await response.json();
       console.log(result.message);
       setIsRunning(false);
+      setSummary(result.summary); // Save the simulation summary
     } catch (error) {
       console.error("Error stopping simulation:", error);
     }
@@ -52,7 +53,7 @@ const ConfigDisplay = () => {
         <p><strong>Debugging:</strong> {configData.debug ? 'Enabled' : 'Disabled'}</p>
       </div>
 
-      {/* Control buttons */}
+      {/* Simulation Control Buttons */}
       <div className="flex justify-center gap-4 mt-4">
         <button
           onClick={handleStart}
@@ -73,6 +74,29 @@ const ConfigDisplay = () => {
           Stop
         </button>
       </div>
+
+      {/* Render the simulation summary when it exists */}
+      {summary && (
+        <div className="p-4 bg-gray-100 border mt-4 rounded-lg">
+          <h3 className="text-lg font-semibold mb-2">Simulation Summary</h3>
+          <div className="space-y-2 text-sm">
+            <p><strong>Vendor Ticket Sales:</strong></p>
+            <ul className="list-disc pl-4">
+              {Object.entries(summary.vendorSales).map(([vendor, tickets]) => (
+                <li key={vendor}>
+                  {vendor}: {tickets} tickets sold
+                </li>
+              ))}
+            </ul>
+            <p><strong>Configuration Used:</strong></p>
+            <ul className="list-disc pl-4">
+              {Object.entries(summary.config).map(([key, value]) => (
+                <li key={key}>{key}: {value}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -10,6 +10,7 @@ class TicketSystem extends EventEmitter {
 
     this.allTickets = []; // Pool of all tickets
     this.activeTicketPool = []; // Tickets available for customers to purchase
+    this.vendorTicketSales = {}; // Track tickets sold by each vendor
 
     this.initializeTickets();
   }
@@ -22,16 +23,15 @@ class TicketSystem extends EventEmitter {
   }
 
   startSimulation() {
-    console.log('Starting simulation...');
+    console.log("Starting simulation...");
     this.isRunning = true;
 
-    // Start vendors first
     for (let i = 0; i < this.config.vendorCount; i++) {
+      this.vendorTicketSales[`Vendor-${i}`] = 0; // Initialize ticket sales for each vendor
       const vendorInterval = this._startVendor(i);
       this.vendorThreads.push(vendorInterval);
     }
 
-    // Delay customers slightly to ensure vendors add tickets first
     setTimeout(() => {
       for (let i = 0; i < this.config.customerCount; i++) {
         const customerInterval = this._startCustomer(i);
@@ -48,12 +48,18 @@ class TicketSystem extends EventEmitter {
     this.customerThreads.forEach(clearInterval);
 
     console.log('Simulation stopped. All threads cleared.');
+
+    // Return the summary
+    return {
+      vendorSales: this.vendorTicketSales,
+      config: this.config,
+    };
   }
 
   _startVendor(vendorID) {
     return setInterval(() => {
       if (!this.isRunning) {
-        clearInterval(this.vendorThreads[vendorID]);
+        clearInterval();
         return;
       }
 
@@ -65,6 +71,7 @@ class TicketSystem extends EventEmitter {
           if (this.allTickets.length > 0) {
             const ticket = this.allTickets.shift();
             this.activeTicketPool.push(ticket);
+            this.vendorTicketSales[ticket.vendorID] += 1; // Log ticket sale by vendor
           }
         }
         console.log(`Vendor-${vendorID} added ${ticketsToAdd} tickets.`);
@@ -74,7 +81,7 @@ class TicketSystem extends EventEmitter {
 
       if (this.allTickets.length === 0) {
         console.log(`Vendor-${vendorID} has no more tickets to add.`);
-        clearInterval(this.vendorThreads[vendorID]);
+        clearInterval();
       }
     }, this.config.ticketReleaseInterval);
   }
@@ -82,20 +89,24 @@ class TicketSystem extends EventEmitter {
   _startCustomer(customerID) {
     return setInterval(() => {
       if (!this.isRunning) {
-        clearInterval(this.customerThreads[customerID]);
+        clearInterval();
         return;
       }
 
       if (this.activeTicketPool.length > 0) {
         const ticket = this.activeTicketPool.shift();
         console.log(`Customer-${customerID} purchased ticket ${ticket.id} from ${ticket.vendorID}`);
-      } else if (this.allTickets.length === 0 && this.activeTicketPool.length === 0) {
-        console.log(`Customer-${customerID} stopping: No more tickets available.`);
-        clearInterval(this.customerThreads[customerID]);
       } else {
-        console.log(`Customer-${customerID} found no tickets. Waiting for vendors...`);
+        console.log(`Customer-${customerID} found no tickets.`);
       }
     }, this.config.customerRetrievalInterval);
+  }
+
+  getSummary() {
+    return {
+      vendorSales: this.vendorTicketSales,
+      config: this.config,
+    };
   }
 }
 

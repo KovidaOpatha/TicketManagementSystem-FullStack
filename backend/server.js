@@ -26,9 +26,9 @@ app.post('/api/start', (req, res) => {
 
 app.post('/api/stop', (req, res) => {
   if (ticketSystem) {
-    ticketSystem.stopSimulation();
+    const summary = ticketSystem.stopSimulation();
     ticketSystem = null;
-    return res.status(200).json({ message: 'Simulation stopped successfully' });
+    return res.status(200).json({ message: 'Simulation stopped successfully.', summary });
   }
   return res.status(400).json({ error: 'No simulation is currently running' });
 });
