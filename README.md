@@ -56,59 +56,110 @@ This project simulates a ticketing system where vendors release tickets periodic
 ### Prerequisites
 1. [Node.js](https://nodejs.org/) installed
 2. [SQLite](https://www.sqlite.org/index.html) (optional, required for database browsing)
+3. Visual Studio Code (VS Code)
 
 ### Steps
 
-1. Download the project files and extract them.
+1. **Download the Project Files**:
+   - Download and extract the project files from the provided archive.
 
-2. Navigate to the `backend` folder and install dependencies:
-   ```bash
-   cd backend
-   npm install
-   ```
+2. **Open the Project in VS Code**:
+   - Open VS Code and use the `File > Open Folder` option to navigate to the extracted project folder.
 
-3. Navigate to the `my-app` folder (frontend) and install dependencies:
-   ```bash
-   cd ../my-app
-   npm install
-   ```
+3. **Set Up the Backend**:
+   - Navigate to the `backend` folder in the terminal:
+     ```bash
+     cd backend
+     ```
+   - Install dependencies:
+     ```bash
+     npm install
+     ```
 
-4. Run the backend server:
-   ```bash
-   cd ../backend
-   node server.js
-   ```
+4. **Set Up the Frontend**:
+   - Open a new terminal in VS Code and navigate to the `my-app` folder:
+     ```bash
+     cd ../my-app
+     ```
+   - Install dependencies:
+     ```bash
+     npm install
+     ```
 
-5. Run the frontend application:
-   ```bash
-   cd ../my-app
-   npm start
-   ```
+5. **Run the Backend Server**:
+   - Navigate back to the `backend` folder in the terminal:
+     ```bash
+     cd ../backend
+     ```
+   - Start the backend server:
+     ```bash
+     node server.js
+     ```
 
-6. Open your browser and navigate to:
-   ```
-   http://localhost:3000
-   ```
+6. **Run the Frontend Application**:
+   - Open a new terminal in VS Code and navigate to the `my-app` folder:
+     ```bash
+     cd ../my-app
+     ```
+   - Start the frontend application:
+     ```bash
+     npm start
+     ```
+
+7. **Access the Application**:
+   - Open your browser and navigate to:
+     ```
+     http://localhost:3000
+     ```
 
 ---
 
 ## Usage
 
+### Configure and Start the System
+
 1. **Configure the Simulation**:
-   - Fill out the form on the homepage or load the last configuration.
+   - Fill out the configuration form on the homepage with the following fields:
+     - **Total Tickets Available**: Total number of tickets in the simulation.
+     - **Max Ticket Capacity**: Maximum tickets in the active pool.
+     - **Tickets Per Release**: Number of tickets released at each interval.
+     - **Ticket Release Interval (seconds)**: Interval at which vendors release tickets.
+     - **Customer Retrieval Interval (seconds)**: Interval at which customers retrieve tickets.
+     - **Number of Vendors**: Total vendors participating.
+     - **Number of Customers**: Total customers participating.
+   - Alternatively, click "Load Last Configuration" to load the previous settings.
 
 2. **Start the Simulation**:
    - Click the "Start" button to begin the simulation.
-   - Watch live logs and real-time ticket count updates.
+   - Observe live logs on the right-hand side.
+   - Monitor the "Remaining Tickets" count, which updates in real-time.
 
 3. **Stop the Simulation**:
    - Click the "Stop" button to end the simulation.
 
 4. **View Summary**:
-   - Click "View Summary" to see vendor and customer statistics.
+   - After stopping the simulation, click "View Summary" to see detailed statistics:
+     - Vendor sales
+     - Customer purchases
+     - Total tickets sold
+     - Configuration used for the simulation
 
-5. **Save Configuration**:
-   - All configurations are automatically saved for future use.
+### Explanation of UI Controls
+
+- **Configuration Form**:
+  - Used to input simulation parameters or load the last saved configuration.
+
+- **Start Button**:
+  - Begins the simulation based on the provided configuration.
+
+- **Stop Button**:
+  - Ends the simulation and displays a summary button.
+
+- **View Summary Button**:
+  - Navigates to the summary page with detailed statistics.
+
+- **Logs Section**:
+  - Displays live activity logs, including ticket sales and vendor actions.
 
 ---
 
@@ -176,5 +227,3 @@ ticketing-system/
   - **URL**: `/api/configuration/last`
   - **Method**: GET
   - **Response**: Configuration data (JSON)
-
----
