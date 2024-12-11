@@ -1,22 +1,27 @@
 // src/App.js
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import ConfigForm from './pages/ConfigForm';
-import ConfigDisplay from './pages/ConfigDisplays';
-import SummaryPage from './pages/SummaryPage';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'; // Import React Router components
+import ConfigForm from './pages/ConfigForm'; // Configuration form component
+import ConfigDisplay from './pages/ConfigDisplays'; // Simulation display component
+import SummaryPage from './pages/SummaryPage'; // Summary page component
 
 const App = () => {
-  // Ensure handleConfigSubmit is defined properly
+  // Function to handle form submission (currently logs the submitted data)
   const handleConfigSubmit = (configData) => {
-    console.log('Config Submitted:', configData);
+    console.log('Config Submitted:', configData); // Log submitted configuration for debugging
   };
 
   return (
-    <Router>
+    <Router> {/* Set up React Router for navigation */}
       <div className="min-h-screen flex justify-center items-center bg-gradient-to-t from-orange-700 via-orange-500 to-orange-300">
-        <Routes>
+        <Routes> {/* Define application routes */}
+          {/* Route to the ConfigForm component (default route) */}
           <Route path="/" element={<ConfigForm onSubmit={handleConfigSubmit} />} />
+          
+          {/* Route to the ConfigDisplay component */}
           <Route path="/display" element={<ConfigDisplay />} />
+          
+          {/* Route to the SummaryPage component */}
           <Route path="/summary" element={<SummaryPage />} />
         </Routes>
       </div>
@@ -24,4 +29,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default App; // Export the App component as the default export
