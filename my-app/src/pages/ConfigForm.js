@@ -1,164 +1,159 @@
-// src/pages/ConfigForm.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const ConfigForm = ({ onSubmit }) => {
+const ConfigForm = () => {
   const [maxTicketCapacity, setMaxTicketCapacity] = useState('');
   const [ticketsPerRelease, setTicketsPerRelease] = useState('');
-  const [ticketReleaseInterval, setTicketReleaseInterval] = useState('');
-  const [customerRetrievalInterval, setCustomerRetrievalInterval] = useState('');
+  const [ticketReleaseInterval, setTicketReleaseInterval] = useState(''); // In seconds
+  const [customerRetrievalInterval, setCustomerRetrievalInterval] = useState(''); // In seconds
   const [vendorCount, setVendorCount] = useState('');
   const [customerCount, setCustomerCount] = useState('');
   const [totalTickets, setTotalTickets] = useState('');
-  const [debug, setDebug] = useState(false);
-  const [errors, setErrors] = useState({});
-
   const navigate = useNavigate();
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (!totalTickets || totalTickets <= 0) newErrors.totalTickets = 'Total Tickets must be a positive number.';
-    if (!maxTicketCapacity || maxTicketCapacity <= 0) newErrors.maxTicketCapacity = 'Max Ticket Capacity must be a positive number.';
-    if (!ticketsPerRelease || ticketsPerRelease <= 0) newErrors.ticketsPerRelease = 'Tickets Per Release must be a positive number.';
-    if (!ticketReleaseInterval || ticketReleaseInterval <= 0) newErrors.ticketReleaseInterval = 'Ticket Release Interval must be a positive number.';
-    if (!customerRetrievalInterval || customerRetrievalInterval <= 0) newErrors.customerRetrievalInterval = 'Customer Retrieval Interval must be a positive number.';
-    if (!vendorCount || vendorCount <= 0) newErrors.vendorCount = 'Vendor Count must be a positive number.';
-    if (!customerCount || customerCount <= 0) newErrors.customerCount = 'Customer Count must be a positive number.';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const loadLastConfiguration = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/configuration/last');
+      if (!response.ok) throw new Error('Failed to fetch last configuration');
+      const config = await response.json();
+
+      // Convert milliseconds to seconds for display
+      setTotalTickets(config.totalTickets);
+      setMaxTicketCapacity(config.maxTicketCapacity);
+      setTicketsPerRelease(config.ticketsPerRelease);
+      setTicketReleaseInterval(config.ticketReleaseInterval / 1000); // Convert ms to s
+      setCustomerRetrievalInterval(config.customerRetrievalInterval / 1000); // Convert ms to s
+      setVendorCount(config.vendorCount);
+      setCustomerCount(config.customerCount);
+    } catch (error) {
+      console.error('Error loading last configuration:', error);
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
-
     const configData = {
+      totalTickets: parseInt(totalTickets),
       maxTicketCapacity: parseInt(maxTicketCapacity),
       ticketsPerRelease: parseInt(ticketsPerRelease),
-      ticketReleaseInterval: parseInt(ticketReleaseInterval),
-      customerRetrievalInterval: parseInt(customerRetrievalInterval),
+      ticketReleaseInterval: parseInt(ticketReleaseInterval) * 1000, // Convert s to ms
+      customerRetrievalInterval: parseInt(customerRetrievalInterval) * 1000, // Convert s to ms
       vendorCount: parseInt(vendorCount),
       customerCount: parseInt(customerCount),
-      totalTickets: parseInt(totalTickets),
-      debug,
     };
 
-    if (onSubmit) {
-      onSubmit(configData);
+    try {
+      const response = await fetch('http://localhost:3001/api/configuration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(configData),
+      });
+      if (!response.ok) throw new Error('Failed to save configuration');
+      console.log('Configuration saved');
+    } catch (error) {
+      console.error('Error saving configuration:', error);
     }
 
     navigate('/display', { state: configData });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-6 bg-white shadow-lg rounded-lg space-y-6">
-      <h2 className="text-2xl font-semibold text-center">Ticketing System Configuration</h2>
+    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-6 bg-gray-800 shadow-lg rounded-lg space-y-6">
+      <h2 className="text-white text-2xl font-semibold text-center">Ticketing System Configuration</h2>
       <div className="space-y-4">
-        {/* Total Tickets Input */}
         <div>
-          <label className="block text-gray-700">Total Tickets Available</label>
+          <label className="block text-white">Total Tickets Available</label>
           <input
             type="number"
             value={totalTickets}
             onChange={(e) => setTotalTickets(e.target.value)}
+            placeholder="Enter total number of tickets"
             className="w-full p-2 border border-gray-300 rounded-lg"
             required
           />
-          {errors.totalTickets && <p className="text-red-500 text-sm">{errors.totalTickets}</p>}
         </div>
-
-        {/* Other Inputs with Validation */}
         <div>
-          <label className="block text-gray-700">Max Ticket Capacity</label>
+          <label className="block text-white">Max Ticket Capacity</label>
           <input
             type="number"
             value={maxTicketCapacity}
             onChange={(e) => setMaxTicketCapacity(e.target.value)}
+            placeholder="Enter maximum ticket capacity"
             className="w-full p-2 border border-gray-300 rounded-lg"
             required
           />
-          {errors.maxTicketCapacity && <p className="text-red-500 text-sm">{errors.maxTicketCapacity}</p>}
         </div>
-
         <div>
-          <label className="block text-gray-700">Tickets Per Release</label>
+          <label className="block text-white">Tickets Per Release</label>
           <input
             type="number"
             value={ticketsPerRelease}
             onChange={(e) => setTicketsPerRelease(e.target.value)}
+            placeholder="Enter tickets released per batch"
             className="w-full p-2 border border-gray-300 rounded-lg"
             required
           />
-          {errors.ticketsPerRelease && <p className="text-red-500 text-sm">{errors.ticketsPerRelease}</p>}
         </div>
-
         <div>
-          <label className="block text-gray-700">Ticket Release Interval</label>
+          <label className="block text-white">Ticket Release Interval (seconds)</label>
           <input
             type="number"
             value={ticketReleaseInterval}
             onChange={(e) => setTicketReleaseInterval(e.target.value)}
+            placeholder="Enter interval between releases in seconds"
             className="w-full p-2 border border-gray-300 rounded-lg"
             required
           />
-          {errors.ticketReleaseInterval && <p className="text-red-500 text-sm">{errors.ticketReleaseInterval}</p>}
         </div>
-
         <div>
-          <label className="block text-gray-700">Customer Retrieval Interval</label>
+          <label className="block text-white">Customer Retrieval Interval (seconds)</label>
           <input
             type="number"
             value={customerRetrievalInterval}
             onChange={(e) => setCustomerRetrievalInterval(e.target.value)}
+            placeholder="Enter interval for customer retrieval in seconds"
             className="w-full p-2 border border-gray-300 rounded-lg"
             required
           />
-          {errors.customerRetrievalInterval && <p className="text-red-500 text-sm">{errors.customerRetrievalInterval}</p>}
         </div>
-
         <div>
-          <label className="block text-gray-700">Number of Vendors</label>
+          <label className="block text-white">Number of Vendors</label>
           <input
             type="number"
             value={vendorCount}
             onChange={(e) => setVendorCount(e.target.value)}
+            placeholder="Enter number of vendors"
             className="w-full p-2 border border-gray-300 rounded-lg"
             required
           />
-          {errors.vendorCount && <p className="text-red-500 text-sm">{errors.vendorCount}</p>}
         </div>
-
         <div>
-          <label className="block text-gray-700">Number of Customers</label>
+          <label className="block text-white">Number of Customers</label>
           <input
             type="number"
             value={customerCount}
             onChange={(e) => setCustomerCount(e.target.value)}
+            placeholder="Enter number of customers"
             className="w-full p-2 border border-gray-300 rounded-lg"
             required
           />
-          {errors.customerCount && <p className="text-red-500 text-sm">{errors.customerCount}</p>}
-        </div>
-
-        {/* Debugging Checkbox */}
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            checked={debug}
-            onChange={(e) => setDebug(e.target.checked)}
-            id="debug"
-            className="mr-2"
-          />
-          <label htmlFor="debug" className="text-gray-700">Enable Debugging</label>
         </div>
       </div>
-
-      <button
-        type="submit"
-        className="w-full bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600 transition"
-      >
-        Submit Configuration
-      </button>
+      <div className="flex justify-between gap-4">
+        <button
+          type="button"
+          onClick={loadLastConfiguration}
+          className="flex-1 bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600 transition"
+        >
+          Load Last Configuration
+        </button>
+        <button
+          type="submit"
+          className="flex-1 bg-green-500 text-white p-3 rounded-md hover:bg-green-600 transition"
+        >
+          Submit Configuration
+        </button>
+      </div>
     </form>
   );
 };

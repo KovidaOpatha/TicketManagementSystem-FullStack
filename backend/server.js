@@ -1,8 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const TicketSystem = require('./logic/ticketSystem');
+const bodyParser = require('body-parser');
+const db = require('./database');
 
 const app = express();
+app.use(bodyParser.json());
+
 const PORT = 3001;
 
 app.use(express.json());
@@ -58,4 +62,68 @@ app.get('/api/status', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
+});
+
+app.post('/api/configuration', (req, res) => {
+  const {
+    totalTickets,
+    maxTicketCapacity,
+    ticketsPerRelease,
+    ticketReleaseInterval,
+    customerRetrievalInterval,
+    vendorCount,
+    customerCount,
+  } = req.body;
+
+  const sql = `
+    INSERT INTO configurations (
+      totalTickets,
+      maxTicketCapacity,
+      ticketsPerRelease,
+      ticketReleaseInterval,
+      customerRetrievalInterval,
+      vendorCount,
+      customerCount
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.run(
+    sql,
+    [
+      totalTickets,
+      maxTicketCapacity,
+      ticketsPerRelease,
+      ticketReleaseInterval,
+      customerRetrievalInterval,
+      vendorCount,
+      customerCount,
+    ],
+    function (err) {
+      if (err) {
+        console.error('Error saving configuration:', err.message);
+        return res.status(500).send('Error saving configuration.');
+      }
+      res.status(201).json({ id: this.lastID, message: 'Configuration saved successfully.' });
+    }
+  );
+});
+
+app.get('/api/configuration/last', (req, res) => {
+  const sql = `
+    SELECT *
+    FROM configurations
+    ORDER BY createdAt DESC
+    LIMIT 1
+  `;
+
+  db.get(sql, (err, row) => {
+    if (err) {
+      console.error('Error fetching last configuration:', err.message);
+      return res.status(500).send('Error fetching last configuration.');
+    }
+    if (!row) {
+      return res.status(404).send('No configurations found.');
+    }
+    res.json(row);
+  });
 });

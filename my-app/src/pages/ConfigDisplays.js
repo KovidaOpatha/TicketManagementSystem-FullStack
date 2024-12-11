@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -10,7 +10,13 @@ const ConfigDisplay = () => {
   const [summary, setSummary] = useState(null); // Store summary data
   const [logs, setLogs] = useState([]); // Logs from the backend
   const [systemStatus, setSystemStatus] = useState("Stopped"); // New system status
+  const logsEndRef = useRef(null); // Ref for logs container
   const navigate = useNavigate();
+
+  // Scroll to the bottom of the logs container when logs are updated
+  useEffect(() => {
+    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [logs]);
 
   // Fetch logs periodically
   useEffect(() => {
@@ -24,18 +30,12 @@ const ConfigDisplay = () => {
           })
           .then((data) => {
             setLogs((prevLogs) => (data.logs ? [...prevLogs, ...data.logs] : prevLogs));
-
-            // Check if all tickets are sold out
-            if (data.ticketPool.length === 0 && systemStatus === "Active") {
-              setSystemStatus("Completed");
-              toast.success("All tickets have been sold out!");
-            }
           })
           .catch((error) => console.error('Error fetching status:', error));
       }, 2000);
     }
     return () => clearInterval(interval);
-  }, [isRunning, systemStatus]);
+  }, [isRunning]);
 
   const handleStart = async () => {
     try {
@@ -98,7 +98,6 @@ const ConfigDisplay = () => {
               <p><strong>Customer Retrieval Interval:</strong> {configData.customerRetrievalInterval} ms</p>
               <p><strong>Number of Vendors:</strong> {configData.vendorCount}</p>
               <p><strong>Number of Customers:</strong> {configData.customerCount}</p>
-              <p><strong>Debugging:</strong> {configData.debug ? 'Enabled' : 'Disabled'}</p>
             </div>
 
             {/* System Status */}
@@ -152,6 +151,7 @@ const ConfigDisplay = () => {
                       {log}
                     </li>
                   ))}
+                  <div ref={logsEndRef} />
                 </ul>
               ) : (
                 <p className="text-white">No logs available</p>

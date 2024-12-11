@@ -26,7 +26,7 @@ class TicketSystem extends EventEmitter {
     const ticketsPerVendor = Math.floor(this.config.totalTickets / this.config.vendorCount);
     let remainingTickets = this.config.totalTickets % this.config.vendorCount;
 
-    for (let i = 0; i < this.config.vendorCount; i++) {
+    for (let i = 1; i <= this.config.vendorCount; i++) {
       const ticketsToAdd = ticketsPerVendor + (remainingTickets > 0 ? 1 : 0);
       remainingTickets--;
 
@@ -34,7 +34,7 @@ class TicketSystem extends EventEmitter {
 
       for (let j = 0; j < ticketsToAdd; j++) {
         this.vendorTickets[`Vendor-${i}`].push({
-          id: `Ticket-${Object.keys(this.vendorTickets).reduce((sum, key) => sum + this.vendorTickets[key].length, 1)}`,
+          id: `Ticket-${Object.keys(this.vendorTickets).reduce((sum, key) => sum + this.vendorTickets[key].length, 0) + 1}`,
           vendorID: `Vendor-${i}`,
         });
       }
@@ -42,7 +42,7 @@ class TicketSystem extends EventEmitter {
       this.vendorSales[`Vendor-${i}`] = 0;
     }
 
-    for (let i = 0; i < this.config.customerCount; i++) {
+    for (let i = 1; i <= this.config.customerCount; i++) {
       this.customerPurchases[`Customer-${i}`] = 0;
     }
 
@@ -53,13 +53,13 @@ class TicketSystem extends EventEmitter {
     this.logActivity('Starting simulation...');
     this.isRunning = true;
 
-    for (let i = 0; i < this.config.vendorCount; i++) {
+    for (let i = 1; i <= this.config.vendorCount; i++) {
       const vendorInterval = this._startVendor(`Vendor-${i}`);
       this.vendorThreads.push(vendorInterval);
     }
 
     setTimeout(() => {
-      for (let i = 0; i < this.config.customerCount; i++) {
+      for (let i = 1; i <= this.config.customerCount; i++) {
         const customerID = `Customer-${i}`;
         const customerInterval = this._startCustomer(customerID);
         this.customerThreads.push(customerInterval);
