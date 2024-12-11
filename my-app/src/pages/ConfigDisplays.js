@@ -1,6 +1,7 @@
-// src/pages/ConfigDisplay.js
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ConfigDisplay = () => {
   const location = useLocation();
@@ -8,6 +9,7 @@ const ConfigDisplay = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [summary, setSummary] = useState(null); // Store summary data
   const [logs, setLogs] = useState([]); // Logs from the backend
+  const [systemStatus, setSystemStatus] = useState("Stopped"); // New system status
   const navigate = useNavigate();
 
   // Fetch logs periodically
@@ -22,12 +24,18 @@ const ConfigDisplay = () => {
           })
           .then((data) => {
             setLogs((prevLogs) => (data.logs ? [...prevLogs, ...data.logs] : prevLogs));
+
+            // Check if all tickets are sold out
+            if (data.ticketPool.length === 0 && systemStatus === "Active") {
+              setSystemStatus("Completed");
+              toast.success("All tickets have been sold out!");
+            }
           })
           .catch((error) => console.error('Error fetching status:', error));
       }, 2000);
     }
     return () => clearInterval(interval);
-  }, [isRunning]);
+  }, [isRunning, systemStatus]);
 
   const handleStart = async () => {
     try {
@@ -38,6 +46,8 @@ const ConfigDisplay = () => {
       });
       if (!response.ok) throw new Error('Failed to start');
       setIsRunning(true);
+      setSystemStatus("Active");
+      toast.info("Simulation started!");
     } catch (error) {
       console.error('Error starting simulation:', error);
     }
@@ -50,6 +60,8 @@ const ConfigDisplay = () => {
       const result = await response.json();
       setSummary(result.summary); // Store the summary locally
       setIsRunning(false);
+      setSystemStatus("Stopped");
+      toast.warn("Simulation stopped.");
     } catch (error) {
       console.error('Error stopping simulation:', error);
     }
@@ -65,6 +77,7 @@ const ConfigDisplay = () => {
 
   return (
     <div className="min-h-screen flex justify-center items-center">
+      <ToastContainer />
       {/* Fixed Layout Container */}
       <div className="w-[1200px] bg-gray-800 shadow-lg p-8 rounded-lg">
         {/* Title Section */}
@@ -86,6 +99,11 @@ const ConfigDisplay = () => {
               <p><strong>Number of Vendors:</strong> {configData.vendorCount}</p>
               <p><strong>Number of Customers:</strong> {configData.customerCount}</p>
               <p><strong>Debugging:</strong> {configData.debug ? 'Enabled' : 'Disabled'}</p>
+            </div>
+
+            {/* System Status */}
+            <div className="mt-4">
+              <h3 className="text-lg text-yellow-400 font-bold">System Status: {systemStatus}</h3>
             </div>
 
             {/* Start/Stop/View Summary Buttons */}
