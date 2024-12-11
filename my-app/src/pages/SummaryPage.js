@@ -60,7 +60,7 @@ const SummaryPage = () => {
           </div>
         </div>
 
-        {/* Back Button */}
+        {/* Back to Configuration Button */}
         <div className="flex justify-center mt-4">
           <button
             className="px-8 py-3 bg-green-600 text-white text-lg font-semibold rounded-md hover:bg-green-700 transition"

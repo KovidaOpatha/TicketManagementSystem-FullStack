@@ -8,12 +8,18 @@ class TicketSystem extends EventEmitter {
     this.customerThreads = [];
     this.isRunning = false;
 
-    this.vendorTickets = {}; // Pre-assigned tickets for each vendor
-    this.activeTicketPool = []; // Tickets available for customers to purchase
-    this.vendorSales = {}; // Track tickets sold by each vendor
-    this.customerPurchases = {}; // Track how many tickets each customer purchased
+    this.vendorTickets = {};
+    this.activeTicketPool = [];
+    this.vendorSales = {};
+    this.customerPurchases = {};
+    this.logs = []; // Logging mechanism
 
     this.initializeTickets();
+  }
+
+  logActivity(message) {
+    this.logs.push(message);
+    if (this.logs.length > 1000) this.logs.shift(); // Keep log size manageable
   }
 
   initializeTickets() {
@@ -33,18 +39,18 @@ class TicketSystem extends EventEmitter {
         });
       }
 
-      this.vendorSales[`Vendor-${i}`] = 0; // Initialize each vendor's ticket sales
+      this.vendorSales[`Vendor-${i}`] = 0;
     }
 
     for (let i = 0; i < this.config.customerCount; i++) {
-      this.customerPurchases[`Customer-${i}`] = 0; // Initialize purchases for each customer
+      this.customerPurchases[`Customer-${i}`] = 0;
     }
 
-    console.log(`Preloaded ${this.config.totalTickets} tickets evenly across vendors.`);
+    this.logActivity(`Initialized ${this.config.totalTickets} tickets.`);
   }
 
   startSimulation() {
-    console.log('Starting simulation...');
+    this.logActivity('Starting simulation...');
     this.isRunning = true;
 
     for (let i = 0; i < this.config.vendorCount; i++) {
@@ -62,31 +68,29 @@ class TicketSystem extends EventEmitter {
   }
 
   stopSimulation() {
-    console.log('Stopping simulation...');
+    this.logActivity('Stopping simulation...');
     this.isRunning = false;
 
-    // Clear vendor and customer intervals
     this.vendorThreads.forEach((interval) => clearInterval(interval));
     this.customerThreads.forEach((interval) => clearInterval(interval));
 
-    console.log('Simulation stopped. All threads cleared.');
-
     const summary = this.getSummary();
-    console.log('Simulation Summary:', summary);
+    this.logActivity('Simulation stopped.');
+    this.logActivity('Summary: ' + JSON.stringify(summary));
     return summary;
   }
 
   _startVendor(vendorID) {
     const vendorInterval = setInterval(() => {
       if (!this.isRunning) {
-        clearInterval(vendorInterval); // Stop the vendor thread if the simulation is stopped
+        clearInterval(vendorInterval);
         return;
       }
 
       const ticketsForVendor = this.vendorTickets[vendorID];
       if (!ticketsForVendor || ticketsForVendor.length === 0) {
-        console.log(`${vendorID} stopping. No more tickets to add.`);
-        clearInterval(vendorInterval); // Stop the vendor thread if no tickets are left
+        this.logActivity(`${vendorID} has no more tickets.`);
+        clearInterval(vendorInterval);
         return;
       }
 
@@ -98,16 +102,16 @@ class TicketSystem extends EventEmitter {
         this.activeTicketPool.push(ticket);
       }
 
-      console.log(`${vendorID} added ${ticketsToAdd} tickets.`);
+      this.logActivity(`${vendorID} added ${ticketsToAdd} tickets.`);
     }, this.config.ticketReleaseInterval);
 
-    return vendorInterval; // Return the interval ID for later clearing
+    return vendorInterval;
   }
 
   _startCustomer(customerID) {
     const customerInterval = setInterval(() => {
       if (!this.isRunning) {
-        clearInterval(customerInterval); // Stop the customer thread if the simulation is stopped
+        clearInterval(customerInterval);
         return;
       }
 
@@ -115,25 +119,16 @@ class TicketSystem extends EventEmitter {
         const ticket = this.activeTicketPool.shift();
         this.customerPurchases[customerID]++;
         this.vendorSales[ticket.vendorID]++;
-        console.log(`${customerID} purchased ticket ${ticket.id} from ${ticket.vendorID}`);
+        this.logActivity(`${customerID} purchased ticket ${ticket.id} from ${ticket.vendorID}`);
       } else if (Object.values(this.vendorTickets).every((tickets) => tickets.length === 0) && this.activeTicketPool.length === 0) {
-        console.log(`${customerID} stopping: No more tickets available.`);
-        clearInterval(customerInterval); // Stop the customer thread if no tickets are left
+        this.logActivity(`${customerID} stopping: No more tickets available.`);
+        clearInterval(customerInterval);
       } else {
-        console.log(`${customerID} found no tickets.`);
-      }
-
-      if (
-        this.activeTicketPool.length === 0 &&
-        Object.values(this.vendorTickets).every((tickets) => tickets.length === 0) &&
-        Object.values(this.customerPurchases).reduce((sum, val) => sum + val, 0) >= this.config.totalTickets
-      ) {
-        console.log('All tickets have been sold. Stopping simulation.');
-        this.stopSimulation();
+        this.logActivity(`${customerID} found no tickets.`);
       }
     }, this.config.customerRetrievalInterval);
 
-    return customerInterval; // Return the interval ID for later clearing
+    return customerInterval;
   }
 
   getSummary() {
@@ -144,6 +139,10 @@ class TicketSystem extends EventEmitter {
       totalCustomerTickets: Object.values(this.customerPurchases).reduce((sum, value) => sum + value, 0),
       config: this.config,
     };
+  }
+
+  getLogs() {
+    return this.logs;
   }
 }
 

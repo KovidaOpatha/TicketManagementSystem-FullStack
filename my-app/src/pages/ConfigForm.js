@@ -1,7 +1,6 @@
 // src/pages/ConfigForm.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import defaultConfig from '../defaultConfig';
 
 const ConfigForm = ({ onSubmit }) => {
   const [maxTicketCapacity, setMaxTicketCapacity] = useState('');
@@ -12,33 +11,43 @@ const ConfigForm = ({ onSubmit }) => {
   const [customerCount, setCustomerCount] = useState('');
   const [totalTickets, setTotalTickets] = useState('');
   const [debug, setDebug] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const navigate = useNavigate();
 
+  const validateForm = () => {
+    const newErrors = {};
+    if (!totalTickets || totalTickets <= 0) newErrors.totalTickets = 'Total Tickets must be a positive number.';
+    if (!maxTicketCapacity || maxTicketCapacity <= 0) newErrors.maxTicketCapacity = 'Max Ticket Capacity must be a positive number.';
+    if (!ticketsPerRelease || ticketsPerRelease <= 0) newErrors.ticketsPerRelease = 'Tickets Per Release must be a positive number.';
+    if (!ticketReleaseInterval || ticketReleaseInterval <= 0) newErrors.ticketReleaseInterval = 'Ticket Release Interval must be a positive number.';
+    if (!customerRetrievalInterval || customerRetrievalInterval <= 0) newErrors.customerRetrievalInterval = 'Customer Retrieval Interval must be a positive number.';
+    if (!vendorCount || vendorCount <= 0) newErrors.vendorCount = 'Vendor Count must be a positive number.';
+    if (!customerCount || customerCount <= 0) newErrors.customerCount = 'Customer Count must be a positive number.';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
 
     const configData = {
-      maxTicketCapacity,
-      ticketsPerRelease,
-      ticketReleaseInterval,
-      customerRetrievalInterval,
-      vendorCount,
-      customerCount,
-      totalTickets,
+      maxTicketCapacity: parseInt(maxTicketCapacity),
+      ticketsPerRelease: parseInt(ticketsPerRelease),
+      ticketReleaseInterval: parseInt(ticketReleaseInterval),
+      customerRetrievalInterval: parseInt(customerRetrievalInterval),
+      vendorCount: parseInt(vendorCount),
+      customerCount: parseInt(customerCount),
+      totalTickets: parseInt(totalTickets),
       debug,
     };
 
-    // Call the onSubmit passed from App.js
     if (onSubmit) {
       onSubmit(configData);
     }
 
     navigate('/display', { state: configData });
-  };
-
-  const loadPreviousConfig = () => {
-    navigate('/display', { state: defaultConfig });
   };
 
   return (
@@ -55,8 +64,10 @@ const ConfigForm = ({ onSubmit }) => {
             className="w-full p-2 border border-gray-300 rounded-lg"
             required
           />
+          {errors.totalTickets && <p className="text-red-500 text-sm">{errors.totalTickets}</p>}
         </div>
 
+        {/* Other Inputs with Validation */}
         <div>
           <label className="block text-gray-700">Max Ticket Capacity</label>
           <input
@@ -66,6 +77,7 @@ const ConfigForm = ({ onSubmit }) => {
             className="w-full p-2 border border-gray-300 rounded-lg"
             required
           />
+          {errors.maxTicketCapacity && <p className="text-red-500 text-sm">{errors.maxTicketCapacity}</p>}
         </div>
 
         <div>
@@ -77,6 +89,7 @@ const ConfigForm = ({ onSubmit }) => {
             className="w-full p-2 border border-gray-300 rounded-lg"
             required
           />
+          {errors.ticketsPerRelease && <p className="text-red-500 text-sm">{errors.ticketsPerRelease}</p>}
         </div>
 
         <div>
@@ -88,6 +101,7 @@ const ConfigForm = ({ onSubmit }) => {
             className="w-full p-2 border border-gray-300 rounded-lg"
             required
           />
+          {errors.ticketReleaseInterval && <p className="text-red-500 text-sm">{errors.ticketReleaseInterval}</p>}
         </div>
 
         <div>
@@ -99,6 +113,7 @@ const ConfigForm = ({ onSubmit }) => {
             className="w-full p-2 border border-gray-300 rounded-lg"
             required
           />
+          {errors.customerRetrievalInterval && <p className="text-red-500 text-sm">{errors.customerRetrievalInterval}</p>}
         </div>
 
         <div>
@@ -110,6 +125,7 @@ const ConfigForm = ({ onSubmit }) => {
             className="w-full p-2 border border-gray-300 rounded-lg"
             required
           />
+          {errors.vendorCount && <p className="text-red-500 text-sm">{errors.vendorCount}</p>}
         </div>
 
         <div>
@@ -121,8 +137,10 @@ const ConfigForm = ({ onSubmit }) => {
             className="w-full p-2 border border-gray-300 rounded-lg"
             required
           />
+          {errors.customerCount && <p className="text-red-500 text-sm">{errors.customerCount}</p>}
         </div>
 
+        {/* Debugging Checkbox */}
         <div className="flex items-center">
           <input
             type="checkbox"
