@@ -12,7 +12,6 @@ This project simulates a ticketing system where vendors release tickets periodic
 - [Usage](#usage)
 - [File Structure](#file-structure)
 - [API Endpoints](#api-endpoints)
-- [Future Enhancements](#future-enhancements)
 
 ---
 
